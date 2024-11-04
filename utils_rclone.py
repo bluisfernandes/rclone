@@ -2,8 +2,6 @@ import sys
 import os
 import subprocess
 
-
-
 def get_directories(url):
     home_path = os.getenv('HOME')
     paths = {}
@@ -51,7 +49,6 @@ def get_input(options, print_confirmation=True, msg=''):
 
 def run_command(command, ask=False):
     GREEN = '\033[32m'
-    UNDERLINE = '\033[4m'
     RESET = '\033[0m'
     
     if ask:
