@@ -1,0 +1,10 @@
+# local,remote [, download] [, upload]
+# rclone copy source:sourcepath dest:destpath
+#
+~/Documents ,remote:/Documents/, download
+#
+~/Downloads, remote:/Downloads, upload, download
+# 
+~.local/share/nautilus/scripts/, remote:/Scripts
+~/projects/rclone, remote:rclone, download, upload
+~/projects, remote:projects, upload, download
