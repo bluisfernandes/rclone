@@ -1,6 +1,12 @@
 import sys
 import os
-from utils_rclone import run_command, get_input, get_directories, choose_mode
+from utils_rclone import run_command, get_input, get_directories, choose_mode, get_subpath, get_subfolders
+
+# Config print colors
+RED = '\033[31m'
+GREEN = '\033[32m'
+UNDERLINE = '\033[4m'
+RESET = '\033[0m'
 
 # Check usage
 inputs = sys.argv
@@ -12,20 +18,23 @@ pwd = inputs[1]
 if not os.path.exists(pwd):
     sys.exit(f"ERROR: input path '{pwd}' does not exist")
 
-
 home_path = os.getenv('HOME')
 directory_path = 'projects/rclone/directories'
 url_directories = os.path.join(home_path, directory_path)
 
-
-print(f"Your current path is:\t {pwd}")
 dirs = get_directories(url_directories)
 
-# Check if current directory is on directories file
-if pwd not in dirs:
-    sys.exit(f"ERROR: '{pwd}' not in directories file")
+is_subpath, base_path = get_subpath(pwd, dirs)
+if is_subpath:
+    rel_path = get_subfolders(base_path, pwd)
 
-modes = choose_mode(dirs[pwd].get('mode'))
+    print(f"Your current path is:\t {GREEN}{base_path}{RESET}/{rel_path}")
+# Check if current directory is on directories file
+else:
+    print(f"{RED}ERROR{RESET}: '{pwd}' not in directories file or subpath")
+    sys.exit()
+
+modes = choose_mode(dirs[base_path].get('mode'))
 
 print("Please select an option:")
 choices_mode = {}
@@ -42,16 +51,17 @@ choice = get_input(choices_mode)
 choice_mode = choices_mode[choice]
 print(f"You selected {choice}: {choice_mode}")
 
-source = dirs[pwd]['target'] if choice_mode == 'download' else dirs[pwd]['source']
-destination = dirs[pwd]['source'] if choice_mode == 'download' else dirs[pwd]['target']
+target_dir = os.path.join(dirs[base_path]['target'], rel_path)
+source_dir = os.path.join(dirs[base_path]['source'], rel_path)
 
-GREEN = '\033[32m'
-UNDERLINE = '\033[4m'
-RESET = '\033[0m'
+source = target_dir if choice_mode == 'download' else source_dir
+destination = source_dir if choice_mode == 'download' else target_dir
+
 print(f'\tFROM: \t{source}\n\tTO: \t{destination}\n\tMODE: \t{UNDERLINE}{choice_mode}{RESET}\n')
 
-command = f'echo clone copy {source} {destination}'
+command = f'rclone copy {source} {destination} -P -v'
 
-run_command(command, ask=True)
+return_code = run_command(command, ask=True)
+status = f'{GREEN}Done.{RESET}' if return_code == 0 else f'{RED}Error.{RESET}'
 # exit
-get_input(None,False, msg= f'{GREEN}Done.{RESET} Press any key to exit')
+get_input(None,False, msg= f'{status} Press any key to exit')

@@ -49,15 +49,16 @@ def get_input(options, print_confirmation=True, msg=''):
 
 def run_command(command, ask=False):
     GREEN = '\033[32m'
+    UNDERLINE = '\033[4m'
     RESET = '\033[0m'
     
     if ask:
         print(f'Proceed with command {GREEN}{command}{RESET} ? (y/n) ', end='')
         choice_proceed = get_input(['y', 'n'], False)
         if choice_proceed != 'y':
-            return
-    print(f"Running {GREEN}{command}{RESET}")
-    
+            return False
+    print(f"Running {UNDERLINE}{command}{RESET}")
+
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     # Print output line by line as it is produced
@@ -75,3 +76,24 @@ def run_command(command, ask=False):
     if return_code != 0:
         error_output = process.stderr.read()
         print("Error:", error_output)
+    
+    return return_code
+
+
+def get_subpath(path, path_list):
+    for base_path in path_list:
+        # Check if path starts with base_path as a common path
+        if os.path.commonpath([base_path, path]) == base_path:
+            return True, base_path
+    return False, None
+
+
+def get_subfolders(base_path, path):
+    # Ensure `path` is a subpath of `base_path`
+    if os.path.commonpath([base_path, path]) != base_path:
+        return None  # Not a subpath
+
+    # Get the relative path
+    relative_path = os.path.relpath(path, base_path)
+    relative_path = '' if relative_path == '.' else relative_path
+    return relative_path
