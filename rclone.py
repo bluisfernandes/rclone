@@ -38,14 +38,15 @@ modes = choose_mode(dirs[base_path].get('mode'))
 
 print("Please select an option:")
 choices_mode = {}
-for k, option in enumerate(modes):
-    choices_mode[str(k)] = option
+for option in modes:
+    choices_mode[option[0]] = option
     choices_mode[option] = option
-    print(f"{k} > {option}")
-print('q > quit')
-choices_mode['q'] = 'quit'
-choices_mode['quit'] = 'quit'
-
+    print(f"{option[0]} > {option}")
+other_choices = ['check', 'quit']
+for other in other_choices:
+    choices_mode[other[0]] = other
+    choices_mode[other] = other
+    print(f"{other[0]} > {other}")
 
 choice = get_input(choices_mode)
 choice_mode = choices_mode[choice]
@@ -54,14 +55,20 @@ print(f"You selected {choice}: {choice_mode}")
 target_dir = os.path.join(dirs[base_path]['target'], rel_path)
 source_dir = os.path.join(dirs[base_path]['source'], rel_path)
 
-source = target_dir if choice_mode == 'download' else source_dir
-destination = source_dir if choice_mode == 'download' else target_dir
+if choice_mode == 'check':
+    return_code = 0
 
-print(f'\tFROM: \t{source}\n\tTO: \t{destination}\n\tMODE: \t{UNDERLINE}{choice_mode}{RESET}\n')
+elif choice_mode == 'download' or choice_mode == 'upload':
 
-command = f'rclone copy {source} {destination} -P -v'
+    source = target_dir if choice_mode == 'download' else source_dir
+    destination = source_dir if choice_mode == 'download' else target_dir
 
-return_code = run_command(command, ask=True)
+    print(f'\tFROM: \t{source}\n\tTO: \t{destination}\n\tMODE: \t{UNDERLINE}{choice_mode}{RESET}\n')
+
+    command = f'rclone copy {source} {destination} -P -v'
+
+    return_code = run_command(command, ask=True)
+
 status = f'{GREEN}Done.{RESET}' if return_code == 0 else f'{RED}Error.{RESET}'
 # exit
 get_input(None,False, msg= f'{status} Press any key to exit')
