@@ -56,7 +56,15 @@ target_dir = os.path.join(dirs[base_path]['target'], rel_path)
 source_dir = os.path.join(dirs[base_path]['source'], rel_path)
 
 if choice_mode == 'check':
-    return_code = 0
+
+    source = source_dir
+    destination = target_dir
+
+    print(f'\tFROM: \t{source}\n\tTO: \t{destination}\n\tMODE: \t{UNDERLINE}{choice_mode}{RESET}\n')
+
+    command = f'temp_file=$(mktemp) && rclone check {source} {destination} --combined $temp_file; cat $temp_file'
+
+    return_code = run_command(command, ask=True)
 
 elif choice_mode == 'download' or choice_mode == 'upload':
 

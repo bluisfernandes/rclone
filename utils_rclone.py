@@ -59,7 +59,7 @@ def run_command(command, ask=False):
             return False
     print(f"Running {UNDERLINE}{command}{RESET}")
 
-    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     # Print output line by line as it is produced
     try:
