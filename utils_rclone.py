@@ -48,7 +48,12 @@ def get_input(options, print_confirmation=True, msg=''):
     return choice
 
 
-def run_command(command, ask=False):
+def run_command(command, ask=False, return_stdout=False):
+    '''
+    Runs a command and returns return_code
+    if return_stdout=True, returns (return_code, stdout)
+    if return_stdout=list, returns (return_code, stdout) for each line that starts with a char in list e.g.(+-=!)
+    '''
     RED = '\033[31m'
     GREEN = '\033[32m'
     UNDERLINE = '\033[4m'
@@ -64,10 +69,16 @@ def run_command(command, ask=False):
     # Start the process
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
+    if return_stdout is not False:
+        to_return = []
     # Function to read stdout in real-time
     def read_stdout():
         for line in process.stdout:
             print(line, end="")
+            if return_stdout is True:
+                to_return.append(line.strip('\n'))
+            elif isinstance(return_stdout,list) and line[0] in return_stdout:
+                to_return.append(line.strip('\n'))
 
     # Function to read stderr in real-time
     def read_stderr():
@@ -88,7 +99,10 @@ def run_command(command, ask=False):
     if return_code != 0:
         print(f"\n{RED}ERROR: {RESET}Command exited with errors. Return code: {return_code}")
     
-    return return_code
+    if return_stdout is False:
+        return return_code
+    else:
+        return return_code, to_return
 
 
 def get_subpath(path, path_list):
