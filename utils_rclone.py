@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import threading
 
 def get_directories(url):
     home_path = os.getenv('HOME')
@@ -48,6 +49,7 @@ def get_input(options, print_confirmation=True, msg=''):
 
 
 def run_command(command, ask=False):
+    RED = '\033[31m'
     GREEN = '\033[32m'
     UNDERLINE = '\033[4m'
     RESET = '\033[0m'
@@ -59,23 +61,32 @@ def run_command(command, ask=False):
             return False
     print(f"Running {UNDERLINE}{command}{RESET}")
 
+    # Start the process
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    # Print output line by line as it is produced
-    try:
+    # Function to read stdout in real-time
+    def read_stdout():
         for line in process.stdout:
-            print(line, end="")  # Print each line as it comes
-    except KeyboardInterrupt:
-        process.terminate()  # Terminate the process if needed
-        print("\nProcess terminated.")
+            print(line, end="")
 
-    # Wait for the command to complete and get the return code
+    # Function to read stderr in real-time
+    def read_stderr():
+        for line in process.stderr:
+            print(f"{RED}ERROR:{RESET} {line}", end="")
+
+    # Start threads to read stdout and stderr simultaneously
+    stdout_thread = threading.Thread(target=read_stdout)
+    stderr_thread = threading.Thread(target=read_stderr)
+    stdout_thread.start()
+    stderr_thread.start()
+
+    # Wait for the process to complete and the threads to finish
+    stdout_thread.join()
+    stderr_thread.join()
     return_code = process.wait()
 
-    # Check for errors
     if return_code != 0:
-        error_output = process.stderr.read()
-        print("Error:", error_output)
+        print(f"\n{RED}ERROR: {RESET}Command exited with errors. Return code: {return_code}")
     
     return return_code
 
