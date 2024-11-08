@@ -62,7 +62,7 @@ if choice_mode == 'check':
 
     print(f'\tFROM: \t{source}\n\tTO: \t{destination}\n\tMODE: \t{UNDERLINE}{choice_mode}{RESET}\n')
 
-    command = f'temp_file=$(mktemp) && rclone check {source} {destination} --combined $temp_file; cat $temp_file'
+    command = f'temp_file=$(mktemp) && rclone check {source} {destination} --combined $temp_file; cat $temp_file | grep -v "^="; rm $temp_file'
 
     return_code = run_command(command, ask=True)
 
